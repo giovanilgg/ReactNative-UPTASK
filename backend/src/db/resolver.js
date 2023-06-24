@@ -68,7 +68,7 @@ const resolvers = {
         const proyecto = await new Proyecto(input);
         proyecto.creador = id;
         const resultado = await proyecto.save();
-        console.log(resultado)
+      
         return resultado;
       } catch (error) {
        

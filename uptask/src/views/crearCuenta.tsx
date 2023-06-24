@@ -19,7 +19,11 @@ type Props = StackScreenProps<Rutas, 'CrearCuenta'>;
 //Apolo Client
 import {useMutation} from '@apollo/client';
 import {CREAR_CUENTA} from '../mutationQuerys/mutationQuerys';
-const CrearCuenta = ({navigation}: Props) => {
+import usePantallaRetroceso from '../hooks/usePantallaRetroceso';
+const CrearCuenta = ({navigation,route}: Props) => {
+  //verificar pantalla
+  const rutaActual= route.name
+  usePantallaRetroceso(rutaActual,navigation)
   const [mensaje,setMensaje]=useState<string>('') 
   //hook de apolo
   const [crearUsuario] = useMutation(CREAR_CUENTA);

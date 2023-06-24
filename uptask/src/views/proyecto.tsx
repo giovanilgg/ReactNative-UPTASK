@@ -29,11 +29,16 @@ import {
 } from '../mutationQuerys/mutationQuerys';
 //React-native icons
 import Icon from 'react-native-vector-icons/FontAwesome';
-
-const Proyecto = ({route}: Props) => {
+import {ScrollView} from 'react-native-gesture-handler';
+//hook
+import usePantallaRetroceso from '../hooks/usePantallaRetroceso';
+const Proyecto = ({route,navigation}: Props) => {
   const {id} = route.params;
   const [mensaje, setMensaje] = useState<string>('');
-  const [idTarea,setIdTarea]=useState<string>('');
+  const [idTarea, setIdTarea] = useState<string>('');
+  //verificar pantalla
+  const rutaActual= route.name
+  usePantallaRetroceso(rutaActual,navigation)
   //Mutation y querys
   const {data, loading, error} = useQuery(OBTENER_TAREAS, {
     variables: {
@@ -43,13 +48,71 @@ const Proyecto = ({route}: Props) => {
     },
   });
   const tareas = loading && <ActivityIndicator />;
-  const [nuevaTarea] = useMutation(NUEVA_TAREA);
+  const [nuevaTarea] = useMutation(NUEVA_TAREA, {
+    update(cache, {data: {nuevaTarea}}) {
+      //Leer cache
+      const {obtenerTareas}: any = cache.readQuery({
+        query: OBTENER_TAREAS,
+        variables: {
+          input: {
+            proyecto: id,
+          },
+        },
+      });
+      //Rescribir cache
+      cache.writeQuery({
+        query: OBTENER_TAREAS,
+        variables: {
+          input: {
+            proyecto: id,
+          },
+        },
+        data: {
+          obtenerTareas: [...obtenerTareas, nuevaTarea],
+        },
+      });
+    },
+  });
   const [actualizarTarea] = useMutation(ACTUALIZAR_TAREA);
-  const [eliminarTarea] = useMutation(ELIMINAR_TAREA);
+  const [eliminarTarea] = useMutation(ELIMINAR_TAREA, {
+    update(cache) {
+        //Leer cache
+      const {obtenerTareas}: any = cache.readQuery({
+        query: OBTENER_TAREAS,
+        variables: {
+          input: {
+            proyecto: id,
+          },
+        },
+      });
+
+      //Filtrar y eliminar la tarea del cache
+      const nuevoArrayTareas=obtenerTareas.filter((tarea:any)=>{
+        return tarea.id !== idTarea
+      })
+   
+      //Rescribir cache
+      cache.writeQuery({
+        query: OBTENER_TAREAS,
+        variables: {
+          input: {
+            proyecto: id,
+          },
+        },
+        
+        data: {
+          obtenerTareas: nuevoArrayTareas,
+        },
+      });
+
+
+
+    },
+  });
   //Cambiar estado de tarea
   const handleTarea = async (tarea: any): Promise<void> => {
     const {id, estado, nombre, proyecto} = tarea;
-    console.log(tarea);
+  
     try {
       const {data} = await actualizarTarea({
         variables: {
@@ -61,14 +124,14 @@ const Proyecto = ({route}: Props) => {
           estado: !estado,
         },
       });
-      console.log('usuario actualizado', data);
+    
     } catch (error) {
       console.log(error);
-      console.log('no se actualizao');
+      
     }
   };
   //Eliminar Tarea
-  const eliminarTareaA =  (id: string) => {
+  const eliminarTareaA = (id: string) => {
     Alert.alert('Eliminar tarea?', 'Esta accion es irreversible', [
       {
         text: 'Cancel',
@@ -76,16 +139,19 @@ const Proyecto = ({route}: Props) => {
       },
       {
         text: 'OK',
-        onPress: async() => {
+        onPress: async () => {
           try {
             const {data} = await eliminarTarea({
               variables: {
                 id,
               },
             });
-            console.log(data);
+          
           } catch (error) {
-            console.log('No se pudo borrar');
+            setMensaje('Lo sentimos no se pudo eliminar la tarea,intente mas tarde');
+            setTimeout(() => {
+              setMensaje('')
+            }, 1000);
           }
         },
       },
@@ -153,7 +219,7 @@ const Proyecto = ({route}: Props) => {
         Presiona para completar tu tarea
       </Text>
       {tareas}
-      <View>
+      <ScrollView>
         {data ? (
           data.obtenerTareas.map((tarea: any) => (
             <Pressable
@@ -161,8 +227,7 @@ const Proyecto = ({route}: Props) => {
               key={tarea.id}
               onPress={() => handleTarea(tarea)}
               onLongPress={() => {
-                eliminarTareaA(tarea.id),
-                setIdTarea(tarea.id)
+                eliminarTareaA(tarea.id), setIdTarea(tarea.id);
               }}>
               <Text>{tarea.nombre}</Text>
 
@@ -176,7 +241,7 @@ const Proyecto = ({route}: Props) => {
         ) : (
           <Text>Por el momento no hay tareas</Text>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 };

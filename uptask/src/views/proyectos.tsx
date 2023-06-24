@@ -1,5 +1,13 @@
-import React from 'react';
-import {Text, View, Pressable, StyleSheet, ScrollView} from 'react-native';
+import React, {useEffect} from 'react';
+import {
+  Text,
+  View,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  BackHandler,
+  Alert
+} from 'react-native';
 //navegacion
 import {Rutas} from '../types/navegacion';
 import {StackScreenProps} from '@react-navigation/stack';
@@ -9,10 +17,14 @@ import {useQuery} from '@apollo/client';
 import {OBTENER_PROYECTOS} from '../mutationQuerys/mutationQuerys';
 //Componentes
 import Targeta from '../components/Targeta';
-const Proyectos = ({navigation}: Props) => {
+//Hook personalizado
+import usePantallaRetroceso from '../hooks/usePantallaRetroceso';
+
+const Proyectos = ({navigation,route}: Props) => {
   //loading true | false en lo que hace la consulta
   const {data, loading, error} = useQuery(OBTENER_PROYECTOS);
-
+  const rutaActual= route.name
+  usePantallaRetroceso(rutaActual,navigation)
   return (
     <View>
       <Pressable style={styles.btnNuevoProyecto}>
@@ -26,7 +38,7 @@ const Proyectos = ({navigation}: Props) => {
         Presiona para ver las tareas de tus proyectos
       </Text>
       <ScrollView>
-        <View  style={styles.contenedorProyectos}  >
+        <View style={styles.contenedorProyectos}>
           {data &&
             data.obtenerProyectos.map((item: any) => (
               <Pressable
@@ -43,6 +55,7 @@ const Proyectos = ({navigation}: Props) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   btnNuevoProyecto: {
     backgroundColor: '#db4648',
@@ -66,21 +79,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 30,
   },
   contenedorProyectos: {
-   flexDirection:'row',
-   flexWrap:'wrap',
-   justifyContent:'space-around',
-  
-   
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
   },
   proyecto: {
-   backgroundColor:'#97BFB0',
-   flexBasis:'40%',
-   height:150,
-   marginVertical:20,
-   padding:8,
-   alignItems:'center',
-   justifyContent:'center',
-   borderRadius:10
+    backgroundColor: '#97BFB0',
+    flexBasis: '40%',
+    height: 150,
+    marginVertical: 20,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
   },
 });
 

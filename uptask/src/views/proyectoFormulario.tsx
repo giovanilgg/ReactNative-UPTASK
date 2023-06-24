@@ -22,8 +22,11 @@ import {
   NUEVO_PROYECTO,
   OBTENER_PROYECTOS,
 } from '../mutationQuerys/mutationQuerys';
-
-const ProyectoFormulario = ({navigation}: Props) => {
+import usePantallaRetroceso from '../hooks/usePantallaRetroceso';
+const ProyectoFormulario = ({navigation,route}: Props) => {
+  //verificar pantalla
+  const rutaActual= route.name
+  usePantallaRetroceso(rutaActual,navigation)
   //Actualizacion de cache para traer de nuevo los proyectos
   const [nuevoProyecto] = useMutation(NUEVO_PROYECTO, {
     update(cache, {data: {nuevoProyecto}}) {
